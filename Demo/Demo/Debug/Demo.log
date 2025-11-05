@@ -1,0 +1,3 @@
+﻿  Demo.cpp
+C:\Users\coris\Desktop\KULIAH\MATKUL\SEMESTER 3\GRAFIKA KOMPUTER\Demo\Demo.cpp(44,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Demo.vcxproj -> C:\Users\coris\Desktop\KULIAH\MATKUL\SEMESTER 3\GRAFIKA KOMPUTER\Demo\Debug\Demo.exe
