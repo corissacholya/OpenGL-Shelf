@@ -23,6 +23,9 @@ GLfloat lightPosition[] = { 3.0f, 2.0f, 5.0f, 1.0f };
 GLfloat globalAmbient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 GLfloat globalDiffuse[] = { 0.8f, 0.8f, 0.8f, 1.0f };
 
+float shelfY[5];
+float shelfTopSurfaceY[5];
+
 void init() {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_LIGHTING);
@@ -42,6 +45,20 @@ void init() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     srand(time(0));
+    
+    float totalFrameHeight = 4.5f;
+    float halfFrameHeight = totalFrameHeight / 2.0f;
+    float shelfThickness = 0.1f;
+    float interiorHeight = totalFrameHeight - 0.2f;
+    float gapHeight = (interiorHeight - 5 * shelfThickness) / 4.0f;
+
+    shelfY[0] = halfFrameHeight - 0.1f - (shelfThickness / 2.0f);
+    for (int i = 1; i < 5; ++i) {
+        shelfY[i] = shelfY[i - 1] - (shelfThickness + gapHeight);
+    }
+    for (int i = 0; i < 5; i++) {
+        shelfTopSurfaceY[i] = shelfY[i] + (shelfThickness / 2.0f);
+    }
 }
 
 void drawCube(float size) {
@@ -85,16 +102,8 @@ void drawShelfFrame() {
     glPopMatrix();
 
     glColor3f(0.96f, 0.96f, 0.86f);
-    float shelfY[5];
     float shelfThickness = 0.1f;
-    float interiorHeight = totalFrameHeight - 0.2f;
-    float gapHeight = (interiorHeight - 5 * shelfThickness) / 4.0f;
-
-    shelfY[0] = halfFrameHeight - 0.1f - (shelfThickness / 2.0f);
-    for (int i = 1; i < 5; ++i) {
-        shelfY[i] = shelfY[i - 1] - (shelfThickness + gapHeight);
-    }
-
+    
     for (int i = 0; i < 5; i++) {
         glPushMatrix();
         glTranslatef(0.0f, shelfY[i], 0.0f);
@@ -174,7 +183,6 @@ void drawSingleDoorPanel(float xOffset, float zDepth, float doorHandleX, float d
 
     glEnable(GL_LIGHTING);
 
-
     glColor3f(0.3f, 0.3f, 0.3f);
     glPushMatrix();
     glTranslatef(doorHandleX, 0.0f, doorHandleZ);
@@ -184,7 +192,6 @@ void drawSingleDoorPanel(float xOffset, float zDepth, float doorHandleX, float d
 
     glPopMatrix();
 }
-
 
 void drawSlidingDoors() {
     float doorDepth = 0.05f;
@@ -205,24 +212,7 @@ void drawSlidingDoors() {
     );
 }
 
-
 void drawItemsInside() {
-    float shelfY[5];
-    float shelfTopSurfaceY[5];
-    float shelfThickness = 0.1f;
-    float totalFrameHeight = 4.5f;
-    float halfFrameHeight = totalFrameHeight / 2.0f;
-    float interiorHeight = totalFrameHeight - 0.2f;
-    float gapHeight = (interiorHeight - 5 * shelfThickness) / 4.0f;
-
-    shelfY[0] = halfFrameHeight - 0.1f - (shelfThickness / 2.0f);
-    for (int i = 1; i < 5; ++i) {
-        shelfY[i] = shelfY[i - 1] - (shelfThickness + gapHeight);
-    }
-    for (int i = 0; i < 5; i++) {
-        shelfTopSurfaceY[i] = shelfY[i] + (shelfThickness / 2.0f);
-    }
-
     float bookHeight = 0.6f;
     float bookWidth = 0.075f;
     float bookDepth = 0.5f;
@@ -251,6 +241,16 @@ void drawItemsInside() {
 
     glColor3f(0.95f, 0.95f, 0.95f);
 
+    static float paperRotations[20];
+    static bool rotationsInitialized = false;
+    
+    if (!rotationsInitialized) {
+        for (int i = 0; i < 20; ++i) {
+            paperRotations[i] = (rand() % 21 - 10) / 2.0f;
+        }
+        rotationsInitialized = true;
+    }
+
     for (int i = 0; i < numPaperRects; ++i) {
         glPushMatrix();
         float currentPaperYCenter = paperYTopSurface + (basePaperThickness / 2.0f) + (i * (basePaperThickness + paperGap));
@@ -260,11 +260,26 @@ void drawItemsInside() {
         }
 
         glTranslatef(paperStackXPosition, currentPaperYCenter, paperZPosition);
-
-        float randomRotation = (rand() % 21 - 10) / 2.0f;
-        glRotatef(randomRotation, 0.0f, 1.0f, 0.0f);
-
+        glRotatef(paperRotations[i], 0.0f, 1.0f, 0.0f);
         glScalef(0.7f, basePaperThickness, 0.8f);
+        drawCube(1.0f);
+        glPopMatrix();
+    }
+
+    float boxYTopSurface = shelfTopSurfaceY[4];
+    float boxHeight = 0.8f;
+    float boxWidth = 0.15f;
+    float boxDepth = 0.5f;
+    float boxSpacing = 0.05f;
+    float boxYCenter = boxYTopSurface + antiZFightOffset + (boxHeight / 2.0f);
+    float boxStartX = -1.5f;
+
+    glColor3f(0.0f, 0.0f, 0.0f);
+
+    for (int i = 0; i < 2; i++) {
+        glPushMatrix();
+        glTranslatef(boxStartX + i * (boxWidth + boxSpacing), boxYCenter, 0.0f);
+        glScalef(boxWidth, boxHeight, boxDepth);
         drawCube(1.0f);
         glPopMatrix();
     }
@@ -326,7 +341,6 @@ void drawLightSource() {
 
     glEnable(GL_LIGHTING);
 }
-
 
 void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -454,6 +468,7 @@ void keyboard(unsigned char key, int x, int y) {
         if (globalAmbient[1] < 0.0f) globalAmbient[1] = 0.0f;
         if (globalAmbient[2] < 0.0f) globalAmbient[2] = 0.0f;
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
+        glutPostRedisplay();
         break;
     case '2':
         globalAmbient[0] += 0.05f; globalAmbient[1] += 0.05f; globalAmbient[2] += 0.05f;
@@ -461,6 +476,7 @@ void keyboard(unsigned char key, int x, int y) {
         if (globalAmbient[1] > 1.0f) globalAmbient[1] = 1.0f;
         if (globalAmbient[2] > 1.0f) globalAmbient[2] = 1.0f;
         glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
+        glutPostRedisplay();
         break;
     case '3':
         globalDiffuse[0] -= 0.05f; globalDiffuse[1] -= 0.05f; globalDiffuse[2] -= 0.05f;
@@ -468,6 +484,7 @@ void keyboard(unsigned char key, int x, int y) {
         if (globalDiffuse[1] < 0.0f) globalDiffuse[1] = 0.0f;
         if (globalDiffuse[2] < 0.0f) globalDiffuse[2] = 0.0f;
         glLightfv(GL_LIGHT0, GL_DIFFUSE, globalDiffuse);
+        glutPostRedisplay();
         break;
     case '4':
         globalDiffuse[0] += 0.05f; globalDiffuse[1] += 0.05f; globalDiffuse[2] += 0.05f;
@@ -475,25 +492,32 @@ void keyboard(unsigned char key, int x, int y) {
         if (globalDiffuse[1] > 1.0f) globalDiffuse[1] = 1.0f;
         if (globalDiffuse[2] > 1.0f) globalDiffuse[2] = 1.0f;
         glLightfv(GL_LIGHT0, GL_DIFFUSE, globalDiffuse);
+        glutPostRedisplay();
         break;
 
     case 'w':
         lightPosition[2] -= 0.2f;
+        glutPostRedisplay();
         break;
     case 's':
         lightPosition[2] += 0.2f;
+        glutPostRedisplay();
         break;
     case 'a':
         lightPosition[0] -= 0.2f;
+        glutPostRedisplay();
         break;
     case 'd':
         lightPosition[0] += 0.2f;
+        glutPostRedisplay();
         break;
     case 'q':
         lightPosition[1] += 0.2f;
+        glutPostRedisplay();
         break;
     case 'e':
         lightPosition[1] -= 0.2f;
+        glutPostRedisplay();
         break;
 
     default:
@@ -515,12 +539,11 @@ void printInstructions() {
     printf("ESC: Exit\n");
 }
 
-
 int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
     glutInitWindowSize(1024, 768);
-    glutCreateWindow("Shelf Demo - Full Scene");
+    glutCreateWindow("Shelf Demo - Real-time Lighting");
 
     printInstructions();
     init();
